@@ -1,8 +1,11 @@
+use std::env::current_dir;
 use std::error::Error;
 use std::fmt::Debug;
 use std::fs::read;
 use std::fs::File;
 use std::io::Write;
+use std::iter::FromIterator;
+use std::path::Component;
 use std::path::Path;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -50,10 +53,18 @@ impl Package {
         let file = File::create(self.path.to_str().unwrap().to_owned() + ".zip")?;
         let mut writer = ZipWriter::new(file);
         let file_list = self.search()?;
+        let current_dir = current_dir()?;
 
         if let None = self.zip_options {}
 
         for file in file_list {
+            let delta = PathBuf::from(
+                file.to_str()
+                    .unwrap()
+                    .strip_prefix(current_dir.to_str().unwrap())
+                    .unwrap(),
+            );
+
             print!(
                 "[{}] {:?}",
                 if file.is_dir() { "D" } else { "F" },
@@ -61,16 +72,13 @@ impl Package {
             );
 
             if file.is_dir() {
-                writer.add_directory(file.to_str().unwrap(), self.zip_options.unwrap())?;
+                writer.add_directory(delta.to_str().unwrap(), self.zip_options.unwrap())?;
                 print!("\n");
             } else {
                 print!("...");
                 let contents = read(&file)?;
 
-                writer.start_file(
-                    file.file_name().unwrap().to_str().unwrap(),
-                    self.zip_options.unwrap(),
-                )?;
+                writer.start_file(delta.to_str().unwrap(), self.zip_options.unwrap())?;
 
                 let bytes_written = writer.write(&contents)?;
                 print!(
@@ -80,6 +88,8 @@ impl Package {
                     safe_divide(bytes_written, contents.len()) * 100
                 );
             }
+
+            println!("{:?}", delta);
         }
 
         writer.finish()?;
