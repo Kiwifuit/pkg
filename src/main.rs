@@ -1,13 +1,9 @@
 use std::env::current_dir;
 use std::error::Error;
 use std::fmt::Debug;
-use std::fs::read;
-use std::fs::File;
+use std::fs::{read, File};
 use std::io::Write;
-use std::iter::FromIterator;
-use std::path::Component;
-use std::path::Path;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use clap::{AppSettings, Parser};
@@ -88,8 +84,6 @@ impl Package {
                     safe_divide(bytes_written, contents.len()) * 100
                 );
             }
-
-            println!("{:?}", delta);
         }
 
         writer.finish()?;
