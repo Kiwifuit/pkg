@@ -39,13 +39,11 @@ impl Package {
     }
 
     pub fn package(&self) -> Result<(), Box<dyn Error>> {
-        let file = File::create(self.path.to_str().unwrap().to_owned() + ".zip")?;
-        let mut writer = ZipWriter::new(file);
-        let file_list = self.search()?;
+        let mut writer = new_zip_file(Box::from(self.path))?;
 
         if let None = self.zip_options {}
 
-        for file in file_list {
+        for file in self.search()? {
             let delta = get_delta(file)?;
 
             print!(

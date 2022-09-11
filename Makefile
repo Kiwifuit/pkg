@@ -1,6 +1,5 @@
-APP_NAME = math-engine
+APP_NAME = pkg
 CARGO_FLAGS = --release --no-default-features
-SERVER_TARGET = aarch64-unknown-linux-gnu
 
 .PHONY: clean all
 all: win linux
