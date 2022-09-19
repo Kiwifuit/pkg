@@ -1,31 +1,28 @@
 use crate::internal::utils::*;
 
 use glob::glob;
-use std::env::current_dir;
 use std::error::Error;
 use std::fmt::Debug;
-use std::fs::{read, File};
-use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::str::FromStr;
 
-use zip::{write::FileOptions, CompressionMethod, ZipWriter};
+use zip::write::FileOptions;
 
 pub struct Package {
-    path: Box<Path>,
+    path: PathBuf,
     zip_options: Option<FileOptions>,
 }
 
 impl Package {
     pub fn new(path: &str) -> Option<Self> {
-        let path = Path::new(path);
+        let path = PathBuf::from(path);
 
         if !(path.exists() && path.is_dir()) {
             return None;
         }
 
         Some(Self {
-            path: Box::from(path),
+            path: path,
             zip_options: None,
         })
     }
@@ -39,12 +36,12 @@ impl Package {
     }
 
     pub fn package(&self) -> Result<(), Box<dyn Error>> {
-        let mut writer = new_zip_file(Box::from(self.path))?;
+        let mut writer = new_zip_file(&self.path)?;
 
         if let None = self.zip_options {}
 
         for file in self.search()? {
-            let delta = get_delta(file)?;
+            let delta = get_delta(&file)?;
 
             print!(
                 "[{}] {:?}",
@@ -57,14 +54,14 @@ impl Package {
                 print!("\n");
             } else {
                 print!("...");
-                let (bytes_written, contentLen) =
+                let (bytes_written, content_length) =
                     add_to_zip(&file, &mut writer, &delta, &self.zip_options.unwrap())?;
 
                 print!(
                     "OK ({}/{} | {:.2}%)\n",
                     bytes_written,
-                    contentLen,
-                    safe_divide(bytes_written, contentLen) * 100
+                    content_length,
+                    safe_divide(bytes_written, content_length) * 100
                 );
             }
         }

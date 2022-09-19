@@ -390,7 +390,7 @@ dependencies = [
 
 [[package]]
 name = "pkg"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "clap 3.2.20",
  "glob",

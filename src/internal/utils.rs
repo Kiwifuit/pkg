@@ -2,7 +2,7 @@ use std::env::current_dir;
 use std::error::Error;
 use std::fs::{read, File};
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use zip::{write::FileOptions, CompressionMethod, ZipWriter};
 
@@ -23,7 +23,7 @@ pub fn str_to_compression_method(meth: String) -> CompressionMethod {
     }
 }
 
-pub fn get_delta(file: PathBuf) -> Result<PathBuf, Box<dyn Error>> {
+pub fn get_delta(file: &PathBuf) -> Result<PathBuf, Box<dyn Error>> {
     let current_dir = current_dir()?;
 
     Ok(PathBuf::from(
@@ -47,7 +47,7 @@ pub fn add_to_zip(
     Ok((writer.write(&contents)?, contents.len()))
 }
 
-pub fn new_zip_file(path: Box<Path>) -> Result<ZipWriter<File>, Box<dyn Error>> {
+pub fn new_zip_file(path: &PathBuf) -> Result<ZipWriter<File>, Box<dyn Error>> {
     let file = File::create(path.to_str().unwrap().to_owned() + ".zip")?;
     Ok(ZipWriter::new(file))
 }

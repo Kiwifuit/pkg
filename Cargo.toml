@@ -1,7 +1,11 @@
 [package]
 name = "pkg"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2021"
+authors = ["Kiwifruit <mahkiwi123@gmail.com>"]
+description = "A simple utility to package platform-dependent dependencies"
+readme = "deb/readme.txt"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -11,3 +15,7 @@ clap = { version = "3.2", features = ["derive"] }
 
 zip = "0.6.2"
 glob = "0.3.0"
+
+[package.metadata.deb]
+license-file = "LICENSE"
+section = "rust"
