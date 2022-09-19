@@ -1,0 +1,104 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*.*.*
+  pull_request:
+    branches:
+      - main
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: Check for any compile-time errors
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt
+          profile: minimal
+          override: true
+
+      - name: Check format
+        uses: actions-rs/cargo@v1
+        with:
+          cmd: fmt
+          args: --all -- --check
+
+  build:
+    name: Build artifacts
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, '/refs/tags/')
+
+    strategy:
+      fail-fast: true
+      matrix:
+        target:
+          # Linux
+          - aarch64-unknown-linux-gnu
+          - armv7-unknown-linux-gnueabihf
+          - arm-unknown-linux-gnueabi
+          - i686-unknown-linux-gnu
+          - x86_64-unknown-linux-gnu
+
+          # Windows
+          - aarch64-pc-windows-msvc
+          - i586-pc-windows-msvc
+          - i686-pc-windows-msvc
+          - x86_64-pc-windows-msvc
+
+          # MacOS
+          - aarch64-apple-darwin
+          - x86_64-apple-darwin
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Make directory for all binaries
+        shell: bash
+        run: mkdir bin
+
+      - name: Install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          target: ${{ matrix.target }}
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --release --target ${{ matrix.target }}
+
+      - name: Copy binary to directory
+        shell: python
+        run: |
+          from pathlib import Path
+          from shutil import copyfile as copy
+
+          file = Path("target/${{ matrix.target }}/release/pkg")
+          file = file.with_name(f"pkg-${{ matrix.target }}")
+          file.rename(file)
+
+          copy(file, "bin/")
+
+      - name: Publish artifacts
+        uses: softprops/action-gh-release@v1
+        with:
+          files: bin/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
